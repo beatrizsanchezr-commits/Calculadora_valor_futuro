@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>¿Cuánto costará en el futuro?</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#E8EDF2; --panel:#F8FAFC; --ink:#16202B; --muted:#5B6877; --line:#C9D2DC;
+  --tag:#C8352B; --tag-ink:#fff; --ok:#1F6F5B; --chart:#C8352B;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10161D; --panel:#18212B; --ink:#EAF0F6; --muted:#9AA8B7; --line:#2C3946;
+    --tag:#FF6B5E; --tag-ink:#10161D; --ok:#5FD0AE; --chart:#FF6B5E; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10161D; --panel:#18212B; --ink:#EAF0F6; --muted:#9AA8B7; --line:#2C3946;
+  --tag:#FF6B5E; --tag-ink:#10161D; --ok:#5FD0AE; --chart:#FF6B5E; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
+main{max-width:720px;margin:0 auto;padding:28px 18px 40px}
+h1{font-size:clamp(1.9rem,6vw,2.8rem);line-height:1.05;margin:0 0 6px;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--muted);margin:0 0 24px;max-width:46ch}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:520px){.row{grid-template-columns:1fr}}
+label{display:block;font-weight:600;font-size:.95rem;margin-bottom:6px}
+input[type=number]{width:100%;font:inherit;font-size:1.2rem;font-weight:600;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+input:focus-visible,button:focus-visible{outline:3px solid var(--ok);outline-offset:2px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.chip{font:inherit;font-size:.9rem;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.rate{margin-top:18px}
+.rate-head{display:flex;justify-content:space-between;align-items:baseline}
+.rate-head output{font-weight:800;font-size:1.3rem}
+input[type=range]{width:100%;accent-color:var(--tag)}
+.hint{font-size:.85rem;color:var(--muted);margin:2px 0 0}
+.ticket{margin-top:20px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 20px;position:relative}
+.ticket .now{color:var(--muted);font-size:1.05rem}
+.ticket .now s{text-decoration-thickness:2px;text-decoration-color:var(--tag)}
+.future{display:inline-block;margin:8px 0 6px;background:var(--tag);color:var(--tag-ink);font-weight:800;font-size:clamp(2rem,9vw,3.4rem);line-height:1;padding:10px 16px;border-radius:6px;letter-spacing:-.02em;word-break:break-word}
+.explain{margin:6px 0 0;font-size:1.05rem}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px;padding-top:16px;border-top:1px dashed var(--line)}
+.stats b{display:block;font-size:1.35rem}
+.stats span{color:var(--muted);font-size:.9rem}
+.chart{margin-top:20px}
+.chart h2{font-size:1.05rem;margin:0 0 8px}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--muted);font-size:11px;font-family:inherit}
+.note{margin-top:18px;font-size:.85rem;color:var(--muted)}
+.err{color:var(--tag);font-size:.88rem;min-height:1.2em;margin:6px 0 0}
+</style>
+</head>
+<body>
+<main>
+  <h1>¿Cuánto costará en el futuro?</h1>
+  <p class="sub">Escribe lo que cuesta algo hoy, elige a cuántos años y mira cuánto costará si los precios siguen subiendo.</p>
+
+  <section class="panel" aria-label="Datos">
+    <div class="row">
+      <div>
+        <label for="monto">Precio de hoy (MXN)</label>
+        <input id="monto" type="number" inputmode="decimal" min="0" step="any" value="1000">
+      </div>
+      <div>
+        <label for="anios">Dentro de cuántos años</label>
+        <input id="anios" type="number" inputmode="numeric" min="1" max="60" step="1" value="10">
+        <div class="chips" id="chips" role="group" aria-label="Plazos rápidos">
+          <button class="chip" data-y="5">5</button>
+          <button class="chip" data-y="10">10</button>
+          <button class="chip" data-y="20">20</button>
+          <button class="chip" data-y="30">30</button>
+        </div>
+      </div>
+    </div>
+    <div class="rate">
+      <div class="rate-head"><label for="tasa">Inflación anual estimada</label><output id="tasaOut" for="tasa">4.5%</output></div>
+      <input id="tasa" type="range" min="1" max="12" step="0.1" value="4.5">
+      <p class="hint">Referencia: la meta de Banxico es 3% (±1 punto). Ajusta la tasa para probar otros escenarios.</p>
+    </div>
+    <p class="err" id="err" role="alert"></p>
+  </section>
+
+  <section class="ticket" aria-live="polite">
+    <div class="now">Hoy: <s id="hoy">$1,000.00</s></div>
+    <div class="future" id="futuro">$1,553.80</div>
+    <p class="explain" id="explica"></p>
+    <div class="stats">
+      <div><b id="acum">+55%</b><span>de aumento acumulado</span></div>
+      <div><b id="poder">$643.93</b><span>es lo que valdrían tus pesos de hoy</span></div>
+    </div>
+    <div class="chart">
+      <h2>Cómo sube el precio año con año</h2>
+      <svg id="grafica" viewBox="0 0 600 240" role="img" aria-label="Gráfica del precio año con año"></svg>
+    </div>
+  </section>
+
+  <p class="note">Es una estimación, no una predicción: la inflación real cambia cada año. Fórmula: precio futuro = precio de hoy × (1 + inflación)<sup>años</sup>.</p>
+</main>
+
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var fmt=new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'});
+  var fmt0=new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0});
+  var monto=$('monto'),anios=$('anios'),tasa=$('tasa');
+
+  function grafica(m,r,n){
+    var W=600,H=240,L=64,R=14,T=14,B=30,pw=W-L-R,ph=H-T-B;
+    var max=m*Math.pow(1+r,n),s='';
+    for(var i=0;i<=3;i++){
+      var v=m+(max-m)*i/3,y=T+ph-(ph*i/3);
+      s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'" stroke="var(--line)" stroke-width="1"/>';
+      s+='<text x="'+(L-8)+'" y="'+(y+4)+'" text-anchor="end">'+fmt0.format(v)+'</text>';
+    }
+    var pts=[];
+    for(var k=0;k<=n;k++){
+      var val=m*Math.pow(1+r,k);
+      var x=L+pw*k/n, yy=T+ph-ph*((val-m)/((max-m)||1));
+      pts.push(x.toFixed(1)+','+yy.toFixed(1));
+    }
+    s+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="var(--chart)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>';
+    var last=pts[pts.length-1].split(',');
+    s+='<circle cx="'+last[0]+'" cy="'+last[1]+'" r="5" fill="var(--chart)"/>';
+    var step=n>20?10:(n>10?5:(n>5?2:1));
+    for(var j=0;j<=n;j+=step){
+      s+='<text x="'+(L+pw*j/n)+'" y="'+(H-8)+'" text-anchor="middle">'+(j===0?'Hoy':j+' a.')+'</text>';
+    }
+    if(n%step!==0){s+='<text x="'+(L+pw)+'" y="'+(H-8)+'" text-anchor="end">'+n+' a.</text>';}
+    $('grafica').innerHTML=s;
+  }
+
+  function calcular(){
+    var m=parseFloat(monto.value),n=parseInt(anios.value,10),r=parseFloat(tasa.value)/100;
+    $('tasaOut').textContent=(r*100).toFixed(1)+'%';
+    var err='';
+    if(isNaN(m)||m<0){err='Escribe un precio de hoy mayor o igual a 0.';}
+    else if(isNaN(n)||n<1||n>60){err='Elige un plazo entre 1 y 60 años.';}
+    $('err').textContent=err;
+    Array.prototype.forEach.call(document.querySelectorAll('.chip'),function(c){
+      c.setAttribute('aria-pressed',String(parseInt(c.dataset.y,10)===n));
+    });
+    if(err){return;}
+    var f=m*Math.pow(1+r,n);
+    $('hoy').textContent=fmt.format(m);
+    $('futuro').textContent=fmt.format(f);
+    $('explica').textContent='Lo que hoy cuesta '+fmt.format(m)+' costaría '+fmt.format(f)+' dentro de '+n+(n===1?' año':' años')+', con una inflación de '+(r*100).toFixed(1)+'% anual.';
+    $('acum').textContent='+'+((Math.pow(1+r,n)-1)*100).toFixed(1)+'%';
+    $('poder').textContent=fmt.format(m/Math.pow(1+r,n));
+    grafica(m,r,n);
+  }
+
+  [monto,anios,tasa].forEach(function(el){el.addEventListener('input',calcular)});
+  $('chips').addEventListener('click',function(e){
+    var y=e.target.dataset&&e.target.dataset.y;
+    if(y){anios.value=y;calcular();}
+  });
+  calcular();
+})();
+</script>
+</body>
+</html>
